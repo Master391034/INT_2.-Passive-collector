@@ -22,13 +22,19 @@ import argparse, json, pathlib, re, shutil
 
 LETTERS = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ"
 
+# Общеизвестная инфраструктура не заменяется: публичные разрешители DNS — это
+# инструмент сбора, а не адреса объекта. Замена здесь скрыла бы от читателя,
+# чем собраны данные, и при этом ничего не защитила.
+PUBLIC_INFRA = {"8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1",
+                "9.9.9.9", "208.67.222.222", "77.88.8.8"}
+
 # Поля, которые вырезаются целиком. Оператор сканера возвращает тела ответов и
 # заголовки страниц; ни один предикат их не читает, а содержат они живой текст
 # сайта организации — название, телефоны, иногда фамилии сотрудников. Для
 # публикуемого набора это и лишний вес, и лишние сведения о людях.
 DROP = ("body", "html_title", "title", "favicon", "_decoded_body",
         "response_body", "html")
-# Без \b слева: адрес встречается внутри URL (…%2f82.204.185.196%2f), и граница
+# Без \b слева: адрес встречается внутри URL (…%2f198.51.100.7%2f), и граница
 # слова между буквой и цифрой не возникает.
 # Без \b слева: адрес встречается внутри URL (…%2f203.0.113.1%2f). Справа
 # допускается точка: автоимена вида 203.0.113.1.sslip.io содержат адрес целиком.
@@ -54,6 +60,8 @@ class Mapper:
 
     def ip_of(self, v):
         # 203.0.113.0/24 — диапазон RFC 5737, отведённый под документацию.
+        if v in PUBLIC_INFRA:
+            return v
         if v not in self.ip:
             self.ip[v] = f"203.0.113.{len(self.ip) + 1}"
         return self.ip[v]
@@ -110,7 +118,7 @@ class Mapper:
         # вида <объект>.<поставщик>.ru, а это другое наблюдение.
         for base, pseudo in self.label.items():
             # Привязка к концу имени обязательна: без неё совпадает префикс
-            # (chudodoctor.infoclinica в chudodoctor.infoclinica.ru), и поддомен
+            # (<объект>.<поставщик> в <объект>.<поставщик>.ru), и поддомен
             # на домене поставщика ошибочно принимается за двойника.
             out = re.sub(r"\b([\w-]*" + re.escape(base) +
                          r"[\w-]*)\.([a-zA-Z]{2,})(?![\w.-])",
@@ -228,11 +236,15 @@ def run(src="data", out="data_demo"):
 
     print(f"обезличено: {len(m.dom)} доменов, {len(m.brand)} названий, "
           f"{len(m.ip)} адресов, {n} снимков -> {out}/")
-    leaks = check(out, m)
+    # Проверяются И выходной набор, И исходники пакета: обозначение, попавшее
+    # в комментарий или в умолчание аргумента, публикуется ровно так же, как
+    # попавшее в снимок. Первая версия проверки смотрела только набор данных
+    # и пропускала код.
+    leaks = check([out, pathlib.Path(__file__).resolve().parent], m, src=src)
     if leaks:
         print("\nПРОВЕРКА НЕ ПРОЙДЕНА: в обезличенном наборе остались исходные "
               "обозначения. Публиковать нельзя.")
-        for what, files in leaks.items():
+        for what, files in sorted(leaks.items()):
             print(f"  {what} -> {', '.join(files[:3])}")
         raise SystemExit(1)
     print(f"проверка пройдена: {len(m.brand) + len(m.inn) + len(m.dom) + len(m.ip)} "
@@ -241,29 +253,46 @@ def run(src="data", out="data_demo"):
     return m
 
 
-def check(out, m):
-    """Поиск исходных обозначений в обезличенном наборе.
+# Что не просматривается: рабочий набор данных (он и содержит исходные
+# обозначения по определению), служебные каталоги и сам обезличиватель,
+# в котором перечень замен присутствует по устройству.
+SKIP_DIRS = {".git", "__pycache__", "exports"}
+
+def check(roots, m, src=None):
+    """Поиск исходных обозначений в обезличенном наборе И в исходниках.
 
     Проверка обязательна и выполняется автоматически: ошибка в замене не видна
     глазом, а цена её — публикация тех самых сведений, ради сокрытия которых
     набор и делается. Ищутся названия, ИНН, домены, метки имён, адреса в точках
     и в дефисах.
     """
-    needles = set(m.brand) | set(m.inn) | set(m.dom) | set(m.ip)
+    roots = [pathlib.Path(r) for r in (roots if isinstance(roots, (list, tuple)) else [roots])]
+    src = pathlib.Path(src).resolve() if src else None
+    needles = (set(m.brand) | set(m.inn) | set(m.dom) | set(m.ip)) - PUBLIC_INFRA
     needles |= {d.split(".")[0] for d in m.dom}
     needles |= {ip.replace(".", "-") for ip in m.ip}
     needles = {x for x in needles if x and len(str(x)) >= 4}
     leaks = {}
-    for p in pathlib.Path(out).rglob("*"):
-        if not p.is_file():
-            continue
-        try:
-            text = p.read_text(encoding="utf-8", errors="ignore")
-        except OSError:
-            continue
-        for x in needles:
-            if str(x) in text:
-                leaks.setdefault(str(x), []).append(str(p.relative_to(out)))
+    seen = set()
+    for root in roots:
+        for p in root.rglob("*"):
+            if not p.is_file() or p in seen:
+                continue
+            seen.add(p)
+            rp = p.resolve()
+            if src and (rp == src or src in rp.parents):
+                continue                      # рабочий набор не просматривается
+            if rp.name == "anonymize.py":
+                continue                      # перечень замен здесь по устройству
+            if SKIP_DIRS & set(p.parts):
+                continue
+            try:
+                text = p.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            for x in needles:
+                if str(x) in text:
+                    leaks.setdefault(str(x), []).append(str(p))
     return leaks
 
 

@@ -188,4 +188,5 @@ def card(key):
     return "\n".join(L)
 
 if __name__ == "__main__":
-    print(card(sys.argv[1] if len(sys.argv) > 1 else "doct.ru"))
+    # Умолчание — первый объект перечня, а не зашитое имя.
+    print(card(sys.argv[1] if len(sys.argv) > 1 else KEYS[0]))
