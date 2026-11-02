@@ -1,7 +1,7 @@
 """Наполнение базы наблюдений из рассчитанного прогона.
 
-Одна строка на наблюдение, включая отрицательные и непроверенные: лог
-ненайденного строится запросом к той же таблице, а не отдельным файлом.
+Одна строка на наблюдение, включая отрицательные и непроверенные. Лог
+ненайденного строится запросом к той же таблице.
 """
 import argparse, json
 from db import open_db, put
@@ -38,7 +38,7 @@ def load(path=None, verbose=True):
                 snapshot_date=day, predicate="not_applicable", pred_reason=why, grp=0)
             n += 1
 
-        # --- периметр: каждый адрес, включая исключённые
+        # периметр
         vd, _, _ = vendors_from_fingerprint(key)
         per = perimeter(key, o["domain"], vendor_domains=vd)
         for cls, rows in (("own", per["own"]), ("supplier", per["supplier"]),
@@ -55,7 +55,7 @@ def load(path=None, verbose=True):
                     raw_path=f"data/raw/{key}/{sp.get('censys')}/censys.json")
                 n += 1
 
-        # --- почтовый канал
+        # почтовый канал
         for m in per["mail"]:
             put(con, object_key=key, feature=m["feature"], value_num=m.get("value_num"),
                 value_text=m.get("note") or m.get("reason"), status=m["status"],
@@ -66,7 +66,7 @@ def load(path=None, verbose=True):
                 raw_path=f"data/raw/{key}/{sp.get('dns')}/dns.json")
             n += 1
 
-        # --- третья сторона по глубинам
+        # третья сторона по глубинам
         for d in r["tp_detail"]:
             if d.get("depth"):
                 put(con, object_key=key, feature=f"REA.DEP{d['depth']}",
@@ -82,7 +82,7 @@ def load(path=None, verbose=True):
                     pred_reason=d["what"], direction="third_party", grp=3)
             n += 1
 
-        # --- группа индикаторов компрометации: исключена по этическому решению
+        # группа индикаторов компрометации: исключена по этическому решению
         put(con, object_key=key, feature="REA.CRED", status="not_checked",
             source="—", snapshot_date=day, predicate="not_applicable",
             pred_reason="источник не используется по этическому решению", grp=1)
