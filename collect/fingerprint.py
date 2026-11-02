@@ -28,8 +28,7 @@ PLATFORMS = {
     "Google Analytics": ["google-analytics", "gtag(", "googletagmanager"],
 }
 
-# Заголовки обычного браузера: часть сайтов за фильтрующим прокси отклоняет
-# нетипичный User-Agent на уровне соединения, и отказ выглядит как сетевая ошибка.
+# Заголовки обычного браузера.
 HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"),
@@ -81,7 +80,7 @@ def collect(domain, obj=None, day=None, timeout=60, attempts=2):
         if h.endswith(domain): continue
         hosts[h] = hosts.get(h, 0) + 1
     d["external_hosts"] = dict(sorted(hosts.items(), key=lambda x: -x[1]))
-    # зависимости: уровень определяется ИМЕНОВАНИЕМ поддомена по объекту
+    # зависимости: уровень определяется именованием поддомена по объекту
     base = domain.split(".")[0]
     vendors = []
     for h, cnt in hosts.items():
