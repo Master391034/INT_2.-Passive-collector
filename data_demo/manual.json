@@ -1,0 +1,309 @@
+{
+ "_note": "Значения, вносимые аналитиком. Собираются не кодом по решению о границе: признак, который и так получает достоверность 2 или 3, вносится вручную, потому что множитель уже учитывает, что это вывод, а не наблюдение.",
+ "critical_scale": {
+  "0.25": "амбулаторная помощь, диагностика: прерывание переносимо",
+  "0.50": "стационар без экстренной помощи: прерывание срывает плановое лечение",
+  "0.75": "стационар с экстренной или интенсивной помощью: прерывание затрагивает здоровье",
+  "1.00": "единственный в территории поставщик профильной помощи"
+ },
+ "objects": {
+  "obj-1.example": {
+   "INT.CRIT": 0.25,
+   "basis": "амбулаторная помощь",
+   "source": "аналитик",
+   "reliability": null,
+   "credibility": 3
+  },
+  "obj-6.example": {
+   "INT.CRIT": 0.75,
+   "basis": "круглосуточный стационар, интенсивная терапия",
+   "source": "аналитик",
+   "reliability": null,
+   "credibility": 3
+  },
+  "obj-7.example": {
+   "INT.CRIT": 0.25,
+   "basis": "амбулаторная многопрофильная клиника",
+   "source": "аналитик",
+   "reliability": null,
+   "credibility": 3
+  },
+  "obj-4.example": {
+   "INT.CRIT": 0.75,
+   "basis": "Амбулаторно/В дневном стационаре/Стационарно",
+   "source": "trmo:Краснодарский кр.",
+   "reliability": "A",
+   "credibility": 1
+  },
+  "obj-5.example": {
+   "INT.CRIT": 0.25,
+   "basis": "Амбулаторно",
+   "source": "trmo:Санкт-Петербург",
+   "reliability": "A",
+   "credibility": 1
+  },
+  "obj-2.example": {
+   "INT.CRIT": 0.75,
+   "basis": "стационар, хирургия, онкология",
+   "source": "аналитик",
+   "reliability": null,
+   "credibility": 3
+  },
+  "obj-3.example": {
+   "INT.CRIT": 0.25,
+   "basis": "амбулаторная сеть",
+   "source": "аналитик",
+   "reliability": null,
+   "credibility": 3
+  }
+ },
+ "addresses_pending": "число адресов приёма для признака INT.DATA: заполняется по семи объектам",
+ "_observations_note": "Наблюдения об объекте, которые НЕ являются признаками индекса. Признаком становится то, для чего есть измеренный вес направления; для состояния сертификата или состава юридических лиц такого веса ни один источник не даёт, и назначать его значило бы вводить число без основания. Эти наблюдения попадают в карточку и объясняют, почему часть картины не пронаблюдена.",
+ "observations": {
+  "obj-6.example": [
+   {
+    "what": "срок действия TLS-сертификата главной страницы истёк",
+    "evidence": "проверка сертификата отклонена дважды с причиной certificate has expired (снимок fingerprint, 2026-10-31)",
+    "source": "собственное наблюдение сборщика",
+    "reliability": "A",
+    "credibility": 1,
+    "consequence": "разметка главной страницы не получена, поэтому группа зависимости от третьей стороны остаётся непронаблюдённой; пробел картины вызван наблюдаемым свойством объекта, а не случайностью сбора"
+   },
+   {
+    "what": "бренд охватывает более одного юридического лица",
+    "evidence": "в приложении № 11 территориальной программы Москвы на 2026 год присутствует АО «К 31 Сити»; АО «Клиника Объект Е» с ИНН 7700000006 в этом приложении не обнаружено",
+    "source": "территориальная программа Москвы, приложение № 11",
+    "reliability": "A",
+    "credibility": 2,
+    "consequence": "границы объекта заданы по ИНН; сведения о другом юридическом лице того же бренда объекту не приписываются"
+   },
+   {
+    "what": "участие в ОМС уже, чем спектр деятельности клиники",
+    "evidence": "клиника раскрывает участие в программах государственных гарантий в части специализированной, в том числе высокотехнологичной, помощи; остальные услуги — платные",
+    "source": "раскрытие самой организации",
+    "reliability": "B",
+    "credibility": 2,
+    "consequence": "признак участия в госпрограммах подтверждён, но критичность всего спектра услуг из факта участия не выводится и остаётся внесённой аналитиком"
+   }
+  ],
+  "obj-3.example": [
+   {
+    "what": "главная страница отвечает отказом 503 при повторных обращениях",
+    "evidence": "два обращения в снимке 2026-10-31, оба HTTP 503; домен при этом живой — DNS разрешается, журнал сертификатов отдаёт имена",
+    "source": "собственное наблюдение сборщика",
+    "reliability": "A",
+    "credibility": 1,
+    "consequence": "группа зависимости от третьей стороны не пронаблюдена; состояние «не проверено», а не «зависимости нет»"
+   }
+  ]
+ },
+ "_own_asns_note": "Автономные системы, принадлежность которых объекту установил аналитик по публичным сведениям о владельце AS. Машина наблюдает систему, принадлежность приписывает человек. Объект без записи здесь считается размещённым у внешнего владельца инфраструктуры.",
+ "own_asns": {
+  "obj-5.example": {
+   "asns": [
+    "XXIcenture - Medical Center XXI century, Autonomous Non-profit organisation"
+   ],
+   "basis": "имя автономной системы называет саму организацию: АНО «Медицинский центр «Двадцать первый век»",
+   "reliability": "A",
+   "credibility": 1
+  }
+ },
+ "oms_baked": {
+  "7700000001": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 0.0,
+    "status": "not_found",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в федеральном реестре ОМС отсутствует",
+    "pred_reason": "источник проверен, результат отрицательный: реестр федеральный, регионы перебирать не нужно"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": null,
+    "status": "not_checked",
+    "source": "trmo",
+    "reliability": null,
+    "credibility": null,
+    "predicate": "not_applicable",
+    "value_text": "нет в трёх проверенных ТРМО",
+    "pred_reason": "ТРМО ведутся по субъектам; проверены три. Отсутствие в них не означает отсутствия в других"
+   }
+  ],
+  "7700000002": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 0.0,
+    "status": "not_found",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в федеральном реестре ОМС отсутствует",
+    "pred_reason": "источник проверен, результат отрицательный: реестр федеральный, регионы перебирать не нужно"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": null,
+    "status": "not_checked",
+    "source": "trmo",
+    "reliability": null,
+    "credibility": null,
+    "predicate": "not_applicable",
+    "value_text": "нет в трёх проверенных ТРМО",
+    "pred_reason": "ТРМО ведутся по субъектам; проверены три. Отсутствие в них не означает отсутствия в других"
+   }
+  ],
+  "7700000003": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 0.0,
+    "status": "not_found",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в федеральном реестре ОМС отсутствует",
+    "pred_reason": "источник проверен, результат отрицательный: реестр федеральный, регионы перебирать не нужно"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": null,
+    "status": "not_checked",
+    "source": "trmo",
+    "reliability": null,
+    "credibility": null,
+    "predicate": "not_applicable",
+    "value_text": "нет в трёх проверенных ТРМО",
+    "pred_reason": "ТРМО ведутся по субъектам; проверены три. Отсутствие в них не означает отсутствия в других"
+   }
+  ],
+  "7700000004": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 1.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в ОМС с 01.01.2026, субъектов 1, подразделений 1"
+   },
+   {
+    "feature": "INT.FOREIGN",
+    "value_num": 0.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "not_applicable",
+    "value_text": "ОКФС 16: частная",
+    "pred_reason": "признака иностранного участия в матрице интереса нет; собран для развилок"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": 0.75,
+    "status": "confirmed",
+    "source": "trmo:Краснодарский кр.",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "Амбулаторно/В дневном стационаре/Стационарно -> стационар с круглосуточным пребыванием"
+   }
+  ],
+  "7700000005": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 1.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в ОМС с 01.01.2026, субъектов 1, подразделений 1"
+   },
+   {
+    "feature": "INT.FOREIGN",
+    "value_num": 0.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "not_applicable",
+    "value_text": "ОКФС 16: частная",
+    "pred_reason": "признака иностранного участия в матрице интереса нет; собран для развилок"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": 0.25,
+    "status": "confirmed",
+    "source": "trmo:Санкт-Петербург",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "Амбулаторно -> амбулаторная помощь, прерывание переносимо"
+   }
+  ],
+  "7700000006": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 1.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в ОМС с 01.01.2026, субъектов 4, подразделений 4"
+   },
+   {
+    "feature": "INT.FOREIGN",
+    "value_num": 1.0,
+    "status": "confirmed",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "not_applicable",
+    "value_text": "ОКФС 34: смешанная",
+    "pred_reason": "признака иностранного участия в матрице интереса нет; собран для развилок"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": null,
+    "status": "not_checked",
+    "source": "trmo",
+    "reliability": null,
+    "credibility": null,
+    "predicate": "not_applicable",
+    "value_text": "нет в трёх проверенных ТРМО",
+    "pred_reason": "ТРМО ведутся по субъектам; проверены три. Отсутствие в них не означает отсутствия в других"
+   }
+  ],
+  "7700000007": [
+   {
+    "feature": "INT.GOV",
+    "value_num": 0.0,
+    "status": "not_found",
+    "source": "oms_federal",
+    "reliability": "A",
+    "credibility": 1,
+    "predicate": "passed",
+    "value_text": "в федеральном реестре ОМС отсутствует",
+    "pred_reason": "источник проверен, результат отрицательный: реестр федеральный, регионы перебирать не нужно"
+   },
+   {
+    "feature": "INT.CRIT",
+    "value_num": null,
+    "status": "not_checked",
+    "source": "trmo",
+    "reliability": null,
+    "credibility": null,
+    "predicate": "not_applicable",
+    "value_text": "нет в трёх проверенных ТРМО",
+    "pred_reason": "ТРМО ведутся по субъектам; проверены три. Отсутствие в них не означает отсутствия в других"
+   }
+  ]
+ }
+}
